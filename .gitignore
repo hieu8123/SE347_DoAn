@@ -1,0 +1,48 @@
+# Ignore dependencies
+node_modules/
+*.lock
+
+# Ignore Expo
+.expo/
+dist/
+web-build/
+
+# Ignore Native app artifacts
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Ignore Metro
+.metro-health-check*
+
+# Ignore debug files
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# Ignore macOS specific files
+.DS_Store
+
+# Ignore local environment files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Ignore TypeScript build information
+*.tsbuildinfo
+
+# Ignore environment-specific files and directories
+.env
+.env.local
+
+# Ignore IDE-specific files and directories
+.idea/
+.vscode/
+
+# Ignore vendor directories
+/vendor/
+
