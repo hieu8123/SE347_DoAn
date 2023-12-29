@@ -20,10 +20,10 @@ const initWebRoutes = (app) => {
     app.post("/api/v2/user/activation", user.activateUser);
     app.post("/api/v2/user/reset-password", user.resetPassword);
     app.post("/api/v2/user/login-user", user.loginUser);
-    app.post("/api/v2/user/getuser", isAuthenticated, user.getUser);
-    app.post("/api/v2/user/logout", user.logoutUser);
+    app.get("/api/v2/user/getuser", isAuthenticated, user.getUser);
+    app.get("/api/v2/user/logout", user.logoutUser);
     app.put("/api/v2/user/update-user-info", isAuthenticated, user.updateUserInfo);
-    app.post("/api/v2/user/update-avatar", [isAuthenticated, upload.single("image")], user.updateUserAvatar);
+    app.put("/api/v2/user/update-avatar", [isAuthenticated, upload.single("image")], user.updateUserAvatar);
     app.put("/api/v2/user/update-user-addresses", isAuthenticated, user.updateUserAddresses);
     app.delete("/api/v2/user/delete-user-address/:id", isAuthenticated, user.deleteUserAddress);
     app.put("/api/v2/user/update-user-password", isAuthenticated, user.updateUserPassword);

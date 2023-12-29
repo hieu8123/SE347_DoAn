@@ -239,7 +239,7 @@ export const categoriesData = [
     id: 7,
     title: "Chăm sóc thú cưng",
     subTitle: "",
-    image_Url: "https://freelancervietnam.vn/wp-content/uploads/2020/07/post-thumb-dich-vu-cham-soc.jpg",
+    image_Url: "https://cdn.openpr.com/T/c/Tc15444071_g.jpg",
   },
   {
     id: 8,

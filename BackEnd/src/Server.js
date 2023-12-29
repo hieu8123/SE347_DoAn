@@ -7,13 +7,13 @@ import { createServer } from 'http';
 import * as path from 'path';
 import initWebRoutes from "./route/Web";
 import ErrorHandler from "./middleware/error";
-import connectDatabase from "./database/Database"
+import connectDatabase from "./database/Database";
 
 const app = express();
 const Server = createServer(app);
 
 app.use(cors({
-    origin: 'http://localhost:3000',
+    origin: `http://localhost:${process.env.CLIENT_PORT}`,
     credentials: true
 }));
 
@@ -28,17 +28,19 @@ initWebRoutes(app);
 
 app.use(ErrorHandler);
 
+// connect db
+connectDatabase();
+
 process.on("uncaughtException", (err) => {
     console.log(`Error: ${err.message}`);
     console.log(`shutting down the server for handling uncaught exception`);
 });
 
-connectDatabase();
 
-const port = process.env.PORT || 8080;
+const port = process.env.SERVER_PORT || 8080;
 
 Server.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
+    console.log(`Server is running on http://localhost:${process.env.SERVER_PORT}`);
 })
 
 // unhandled promise rejection

@@ -24,10 +24,9 @@ const Login = () => {
         },
         { withCredentials: true }
       );
-
       const userData = response.data.user;
       const userRole = userData.role;
-
+      console.log(userRole);
       toast.success("Đăng nhập thành công!");
 
       // Check the role and navigate accordingly
