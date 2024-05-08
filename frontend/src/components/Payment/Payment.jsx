@@ -6,49 +6,22 @@ import {
   CardNumberElement,
   CardCvcElement,
   CardExpiryElement,
-  useStripe,
-  useElements,
 } from "@stripe/react-stripe-js";
-import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { useSelector } from "react-redux";
 import axios from "axios";
 import { server } from "../../server";
 import { toast } from "react-toastify";
-import { RxCross1 } from "react-icons/rx";
 const Payment = () => {
   const [orderData, setOrderData] = useState([]);
   const [open, setOpen] = useState(false);
   const { user } = useSelector((state) => state.user);
   const navigate = useNavigate();
-  const stripe = useStripe();
-  const elements = useElements();
 
   useEffect(() => {
     const orderData = JSON.parse(localStorage.getItem("latestOrder"));
     setOrderData(orderData);
   }, []);
 
-  const createOrder = (data, actions) => {
-    return actions.order
-      .create({
-        purchase_units: [
-          {
-            description: "Thanh toán đơn hàng 4D Market",
-            amount: {
-              currency_code: "USD",
-              value: orderData?.totalPrice / 25000,
-            },
-          },
-        ],
-        // not needed if a shipping address is actually needed
-        application_context: {
-          shipping_preference: "NO_SHIPPING",
-        },
-      })
-      .then((orderID) => {
-        return orderID;
-      });
-  };
 
   const order = {
     cart: orderData?.cart,
@@ -57,49 +30,13 @@ const Payment = () => {
     totalPrice: orderData?.totalPrice,
   };
 
-  const onApprove = async (data, actions) => {
-    return actions.order.capture().then(function (details) {
-      const { payer } = details;
-
-      let paymentInfo = payer;
-
-      if (paymentInfo !== undefined) {
-        paypalPaymentHandler(paymentInfo);
-      }
-    });
-  };
-
-  const paypalPaymentHandler = async (paymentInfo) => {
-    const config = {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    };
-
-    order.paymentInfo = {
-      id: paymentInfo.payer_id,
-      status: "Đã thanh toán",
-      type: "Paypal",
-    };
-
-    await axios
-      .post(`${server}/order/create-order`, order, config)
-      .then(() => {
-        setOpen(false);
-        navigate("/order/success");
-        toast.success("Đặt hàng thành công!");
-        localStorage.setItem("cartItems", JSON.stringify([]));
-        localStorage.setItem("latestOrder", JSON.stringify([]));
-        window.location.reload();
-      });
-  };
 
   const paymentData = {
-    amount: Math.round(orderData?.totalPrice * 100),
+    amount: orderData?.totalPrice || 0,
   };
 
-  const paymentHandler = async (e) => {
-    e.preventDefault();
+  const paymentHandler = async () => {
+    console.log("payment handler")
     try {
       const config = {
         headers: {
@@ -108,42 +45,21 @@ const Payment = () => {
       };
 
       const { data } = await axios.post(
-        `${server}/payment/process`,
+        `${server}/payment/process-vnpay`,
         paymentData,
         config
       );
 
-      const client_secret = data.client_secret;
+      const paymentUrl = data.paymentUrl;
 
-      if (!stripe || !elements) return;
-      const result = await stripe.confirmCardPayment(client_secret, {
-        payment_method: {
-          card: elements.getElement(CardNumberElement),
-        },
-      });
-
-      if (result.error) {
-        toast.error(result.error.message);
+      if (paymentUrl) {
+        window.location.href = paymentUrl;
+        localStorage.setItem("paymentMethod", "VNPay");
+        localStorage.setItem("bill", JSON.stringify(order))
       } else {
-        if (result.paymentIntent.status === "Đã thanh toán") {
-          order.paymnentInfo = {
-            id: result.paymentIntent.id,
-            status: result.paymentIntent.status,
-            type: "Credit Card",
-          };
-
-          await axios
-            .post(`${server}/order/create-order`, order, config)
-            .then(() => {
-              setOpen(false);
-              navigate("/order/success");
-              toast.success("Đặt hàng thành công!");
-              localStorage.setItem("cartItems", JSON.stringify([]));
-              localStorage.setItem("latestOrder", JSON.stringify([]));
-              window.location.reload();
-            });
-        }
+         toast.error('Không có URL thanh toán trả về từ máy chủ.')
       }
+
     } catch (error) {
       toast.error(error);
     }
@@ -168,6 +84,7 @@ const Payment = () => {
         setOpen(false);
         navigate("/order/success");
         toast.success("Đặt hàng thành công!");
+        localStorage.setItem("paymentMethod", "Cash On Delivery");
         localStorage.setItem("cartItems", JSON.stringify([]));
         localStorage.setItem("latestOrder", JSON.stringify([]));
         window.location.reload();
@@ -182,8 +99,6 @@ const Payment = () => {
             user={user}
             open={open}
             setOpen={setOpen}
-            onApprove={onApprove}
-            createOrder={createOrder}
             paymentHandler={paymentHandler}
             cashOnDeliveryHandler={cashOnDeliveryHandler}
           />
@@ -198,10 +113,7 @@ const Payment = () => {
 
 const PaymentInfo = ({
   user,
-  open,
   setOpen,
-  onApprove,
-  createOrder,
   paymentHandler,
   cashOnDeliveryHandler,
 }) => {
@@ -320,7 +232,7 @@ const PaymentInfo = ({
       </div>
 
       <br />
-      {/* paypal payment */}
+      {/* VNPay payment */}
       <div>
         <div className="flex w-full pb-5 border-b mb-2">
           <div
@@ -331,7 +243,7 @@ const PaymentInfo = ({
             ) : null}
           </div>
           <h4 className="text-[18px] pl-2 font-[600] text-[#000000b1]">
-            Thanh toán với Paypal
+            Thanh toán với VNPay
           </h4>
         </div>
 
@@ -340,33 +252,9 @@ const PaymentInfo = ({
           <div className="w-full flex border-b">
             <div
               className={`${styles.button} !bg-[#f63b60] text-white h-[45px] rounded-[5px] cursor-pointer text-[18px] font-[600]`}
-              onClick={() => setOpen(true)}>
+              onClick={() => paymentHandler()}>
               Thanh toán ngay
             </div>
-            {open && (
-              <div className="w-full fixed top-0 left-0 bg-[#00000039] h-screen flex items-center justify-center z-[99999]">
-                <div className="w-full 800px:w-[40%] h-screen 800px:h-[80vh] bg-white rounded-[5px] shadow flex flex-col justify-center p-8 relative overflow-y-scroll">
-                  <div className="w-full flex justify-end p-3">
-                    <RxCross1
-                      size={30}
-                      className="cursor-pointer absolute top-3 right-3"
-                      onClick={() => setOpen(false)}
-                    />
-                  </div>
-                  <PayPalScriptProvider
-                    options={{
-                      "client-id":
-                        "Afs_f5Gaq6YccxWoRoGg98P5ig31BsJAzHJR5bdj-IfUjRXXuQpRtirZQkWx5KZoCihrk3un4Ff89NCo",
-                    }}>
-                    <PayPalButtons
-                      style={{ layout: "vertical" }}
-                      onApprove={onApprove}
-                      createOrder={createOrder}
-                    />
-                  </PayPalScriptProvider>
-                </div>
-              </div>
-            )}
           </div>
         ) : null}
       </div>

@@ -94,16 +94,17 @@ const Header = ({ activeHeading }) => {
           <div className="w-[50%] relative">
             <Tippy
               visible={showResult && searchTerm}
-              //hideOnClick={true}
+              hideOnClick={true}
               interactive
+              placement="bottom"
               render={(attrs) => (
                 <div className="box" tabIndex="-1" {...attrs}>
-                  <div>
+                  <div style={{ overflowY: 'scroll', maxHeight: '40vh'}} >
                     {searchData &&
                       searchData.map((i, index) => {
                         return (
                           <Link to={`/product/${i._id}`} key={index}>
-                            <div className="w-full flex items-start-py-3 cart-item">
+                            <div className="w-full flex items-start-py-3 cart-item p-2 mb-3">
                               <img
                                 src={`${backend_url}${i.images[0]}`}
                                 alt=""
@@ -118,6 +119,7 @@ const Header = ({ activeHeading }) => {
                 </div>
               )}
               onClickOutside={handleShowResult}
+              
             >
               <div>
                 <input

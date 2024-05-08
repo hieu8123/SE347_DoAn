@@ -230,7 +230,7 @@ const ShippingInfo = ({
               </option>
               {Country &&
                 Country.getAllCountries().map((item) => (
-                  <option key={item.isoCode} value={item.isoCode}>
+                  <option key={item.isoCode} value={item.isoCode}   selected={item.isoCode === 'VN'}>
                     {item.name}
                   </option>
                 ))}
