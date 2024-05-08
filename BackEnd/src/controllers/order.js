@@ -87,9 +87,11 @@ const updateOrderStatus = catchAsyncErrors(async (req, res, next) => {
     }
 
     if (req.body.status === "Transferred to delivery partner") {
-      order.cart.forEach(async (o) => {
-        await updateOrder(o._id, o.qty);
-      });
+      await Promise.all(
+        order.cart.map(async (o) => {
+          await updateOrder(o._id, o.qty);
+        })
+      );
     }
 
     order.status = req.body.status;
@@ -97,6 +99,8 @@ const updateOrderStatus = catchAsyncErrors(async (req, res, next) => {
     if (req.body.status === "Delivered") {
       order.deliveredAt = Date.now();
       order.paymentInfo.status = "Đã thanh toán";
+      order.status = "Delivered";
+      console.log(order);
       const serviceCharge = order.totalPrice * 0.1;
       await updateSellerInfo(order.totalPrice - serviceCharge);
     }
@@ -109,6 +113,7 @@ const updateOrderStatus = catchAsyncErrors(async (req, res, next) => {
     });
 
     async function updateOrder(id, qty) {
+      console.log(id, qty);
       const product = await Product.findById(id);
 
       product.stock -= qty;
@@ -118,13 +123,16 @@ const updateOrderStatus = catchAsyncErrors(async (req, res, next) => {
     }
 
     async function updateSellerInfo(amount) {
-      const seller = await Shop.findById(req.seller.id);
+      const shopId = req.seller;
+      console.log("seller", shopId);
+      // const seller = await Shop.findById(shopId);
 
-      seller.availableBalance += amount;
+      // seller.availableBalance += amount;
 
-      await seller.save();
+      // await seller.save();
     }
   } catch (error) {
+    console.log(error);
     return next(new ErrorHandler(error.message, 500));
   }
 });

@@ -28,7 +28,7 @@ useEffect(()=>{
     };
 
     let data = await axios
-      .post(`${server}/order/create-order`, null,{
+      .get(`${server}/payment/vnpay-return`, null,{
         params: searchParams
       })
     setIsSuccess(data.status || false);
@@ -37,9 +37,18 @@ useEffect(()=>{
       type: "VNPay",
       status: "Success"
     };
+
+    console.log(order);
+
     if(data.status){
-       await axios
+    await axios
       .post(`${server}/order/create-order`, order, config)
+      .then(() => {
+        localStorage.setItem("paymentMethod", "Cash On Delivery");
+        localStorage.setItem("cartItems", JSON.stringify([]));
+        localStorage.setItem("latestOrder", JSON.stringify([]));
+        window.location.reload();
+      });
     }
   }
 
